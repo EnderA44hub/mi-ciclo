@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Mi Ciclo"/>
+<meta name="theme-color" content="#8B5E83"/>
+<title>Mi Ciclo</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%238B5E83'/%3E%3Cstop offset='100%25' stop-color='%23c084a8'/%3E%3C/linearGradient%3E%3ClinearGradient id='hg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f7dff0'/%3E%3Cstop offset='100%25' stop-color='%23E8758A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23bg)'/%3E%3Cpath d='M256 390C256 390 92 282 92 182C92 128 134 92 182 98C212 101 240 122 256 148C272 122 300 101 330 98C378 92 420 128 420 182C420 282 256 390 256 390Z' fill='url(%23hg)'/%3E%3C/svg%3E"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#FDF6F9}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button{-webkit-tap-highlight-color:transparent;font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+#app{max-width:430px;margin:0 auto;min-height:100vh;background:#FDF6F9;padding-bottom:88px}
+
+/* range inputs */
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#e8d0e8;outline:none;display:block}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+input[type=range].pink{accent-color:#E8758A}
+input[type=range].pink::-webkit-slider-thumb{background:#E8758A}
+input[type=range].mauve{accent-color:#8B5E83}
+input[type=range].mauve::-webkit-slider-thumb{background:#8B5E83}
+input[type=date]{color-scheme:light}
+
+/* calendar day cells — fixed square without aspectRatio */
+.cal-day{border:none;border-radius:50%;width:100%;height:0;padding-bottom:100%;position:relative;font-size:13px;background:transparent;color:#9a8098}
+.cal-day span{position:absolute;top:50%;left:50%;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}
+.cal-day.phase-period{background:#fce8ed;color:#E8758A}
+.cal-day.phase-fertile{background:#f0e4ef;color:#8B5E83}
+.cal-day.phase-ovulation{background:#f7dff0;color:#c084a8}
+.cal-day.phase-luteal{background:#f0eaf8;color:#9a82b0}
+.cal-day.phase-follicular{background:#fdf0fb;color:#c4a0d4}
+.cal-day.is-today{outline:2.5px solid #8B5E83;outline-offset:1px;font-weight:800}
+.cal-day.is-selected{background:#8B5E83!important;color:#fff!important}
+
+/* tabs */
+.tab-bar{display:-webkit-flex;display:flex;background:#fff;border-bottom:1px solid #f0dce8;position:-webkit-sticky;position:sticky;top:0;z-index:10}
+.tab-btn{-webkit-flex:1;flex:1;padding:11px 0;border:none;background:none;font-size:11px;font-weight:400;color:#b0a0b8;border-bottom:2.5px solid transparent}
+.tab-btn.active{font-weight:700;color:#8B5E83;border-bottom-color:#8B5E83}
+
+/* cards */
+.card{background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 10px rgba(139,94,131,0.07);border:1px solid #f0dce8}
+.card-grad{background:-webkit-linear-gradient(top left,#f5eef5,#fdf0f9);background:linear-gradient(135deg,#f5eef5,#fdf0f9)}
+.card-danger{border:1px solid #fbb0c0}
+.lbl{font-size:12px;color:#b0a0b8;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:5px}
+.inp{width:100%;padding:11px 14px;border:1.5px solid #e8d0e8;border-radius:10px;font-size:15px;color:#5a3d5a;outline:none;background:#fdf8fc;display:block;-webkit-appearance:none}
+
+/* buttons */
+.btn-primary{width:100%;padding:14px;border:none;border-radius:12px;background:-webkit-linear-gradient(top left,#8B5E83,#c084a8);background:linear-gradient(135deg,#8B5E83,#c084a8);color:#fff;font-size:16px;font-weight:700;display:block;text-align:center}
+.btn-ghost{width:100%;padding:13px;border:1.5px solid #e0d0e8;border-radius:12px;background:none;color:#8B5E83;font-size:15px;font-weight:600;display:block}
+.btn-danger{width:100%;padding:13px;border:1.5px solid #fbb;border-radius:12px;background:none;color:#e05070;font-size:15px;font-weight:600;display:block}
+.btn-sm-edit{background:#f5eef5;border:none;border-radius:8px;padding:7px 10px;color:#8B5E83;font-size:14px}
+.btn-sm-del{background:#fce8ed;border:none;border-radius:8px;padding:7px 10px;color:#E8758A;font-size:14px}
+
+/* FAB */
+.fab{position:fixed;bottom:24px;right:22px;width:54px;height:54px;border-radius:50%;background:-webkit-linear-gradient(top left,#8B5E83,#c084a8);background:linear-gradient(135deg,#8B5E83,#c084a8);border:none;color:#fff;font-size:28px;line-height:54px;text-align:center;box-shadow:0 4px 18px rgba(139,94,131,0.42);z-index:50}
+
+/* modal */
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(90,61,90,0.45);display:-webkit-flex;display:flex;-webkit-align-items:flex-end;align-items:flex-end;z-index:200}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 22px 48px;width:100%}
+.drag-handle{width:40px;height:4px;background:#e0d0e0;border-radius:2px;margin:0 auto 18px}
+
+/* confirm */
+.confirm-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(90,61,90,0.55);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;z-index:300;padding:24px}
+.confirm-box{background:#fff;border-radius:18px;padding:28px 24px 20px;width:100%;max-width:320px;text-align:center}
+
+/* onboarding dots */
+.dots{position:fixed;top:20px;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%);display:-webkit-flex;display:flex;gap:6px;z-index:100}
+.dot{height:8px;border-radius:4px;background:#e0d0e8;-webkit-transition:all .3s;transition:all .3s}
+.dot.active{width:22px!important;background:#8B5E83}
+
+/* flex helpers */
+.row{display:-webkit-flex;display:flex}
+.col{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column}
+.flex1{-webkit-flex:1;flex:1}
+.center{-webkit-align-items:center;align-items:center}
+.between{-webkit-justify-content:space-between;justify-content:space-between}
+.wrap{-webkit-flex-wrap:wrap;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ── Polyfills & compat ────────────────────────────────────────────────────────
+var STORAGE_KEY = 'ciclo_v2';
+
+var PHASES = {
+  period:     {label:'Menstruación',   color:'#E8758A',bg:'#fce8ed',emoji:'🌸',tip:'Tu período está activo. Descansa, hidrátate y cuídate mucho 💗'},
+  fertile:    {label:'Ventana fértil', color:'#8B5E83',bg:'#f0e4ef',emoji:'✨',tip:'Alta probabilidad de fertilidad. Tu cuerpo se prepara para la ovulación.'},
+  ovulation:  {label:'Ovulación',      color:'#c084a8',bg:'#f7dff0',emoji:'🌕',tip:'Día de máxima fertilidad. Tu energía suele estar en su punto más alto.'},
+  luteal:     {label:'Fase lútea',     color:'#9a82b0',bg:'#f0eaf8',emoji:'🌙',tip:'El cuerpo se prepara. Pueden aparecer síntomas premenstruales hacia el final.'},
+  follicular: {label:'Fase folicular', color:'#c4a0d4',bg:'#fdf0fb',emoji:'🌱',tip:'Energía en aumento. Buen momento para nuevos proyectos y actividad física.'}
+};
+var MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var DAYS   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function addDays(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+function toYMD(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
+function today0(){var d=new Date();d.setHours(0,0,0,0);return d;}
+function sortCycles(c){return c.slice().sort(function(a,b){return new Date(a.start)-new Date(b.start);});}
+
+function avgCycleLen(cycles){
+  if(cycles.length<2)return null;
+  var s=sortCycles(cycles),diffs=[],i,d;
+  for(i=1;i<s.length;i++){d=daysBetween(s[i-1].start,s[i].start);if(d>15&&d<60)diffs.push(d);}
+  if(!diffs.length)return null;
+  return Math.round(diffs.reduce(function(a,b){return a+b;},0)/diffs.length);
+}
+function avgPeriodDur(cycles){
+  var v=cycles.map(function(c){return c.periodDuration;}).filter(function(d){return d>0&&d<15;});
+  if(!v.length)return null;
+  return Math.round(v.reduce(function(a,b){return a+b;},0)/v.length);
+}
+function phaseOnDay(date,cycles){
+  if(!cycles.length)return null;
+  var s=sortCycles(cycles);
+  var cl=avgCycleLen(s)||s[s.length-1].cycleLength||28;
+  var pd=avgPeriodDur(s)||s[s.length-1].periodDuration||5;
+  var last=new Date(s[s.length-1].start);last.setHours(0,0,0,0);
+  var d=new Date(date);d.setHours(0,0,0,0);
+  var diff=daysBetween(last,d);
+  var idx=Math.floor(diff/cl);
+  var cs=addDays(last,idx*cl);cs.setHours(0,0,0,0);
+  var dic=daysBetween(cs,d);
+  if(dic<0||dic>=cl)return null;
+  var ov=cl-14;
+  if(dic<pd)return 'period';
+  if(dic>=ov-5&&dic<ov-1)return 'fertile';
+  if(dic>=ov-1&&dic<=ov+1)return 'ovulation';
+  if(dic>ov+1)return 'luteal';
+  return 'follicular';
+}
+function dayOfCycle(cycles){
+  if(!cycles.length)return null;
+  var s=sortCycles(cycles);
+  var cl=avgCycleLen(s)||s[s.length-1].cycleLength||28;
+  var last=new Date(s[s.length-1].start);last.setHours(0,0,0,0);
+  return(daysBetween(last,today0())%cl)+1;
+}
+function nextEvents(cycles){
+  if(!cycles.length)return{};
+  var s=sortCycles(cycles);
+  var cl=avgCycleLen(s)||s[s.length-1].cycleLength||28;
+  var pd=avgPeriodDur(s)||s[s.length-1].periodDuration||5;
+  var last=new Date(s[s.length-1].start);last.setHours(0,0,0,0);
+  var t=today0(),n=0,np=null,c;
+  while(n<24){c=addDays(last,n*cl);c.setHours(0,0,0,0);if(c>t){np=c;break;}n++;}
+  if(!np)return{};
+  var ov=cl-14;
+  return{nextPeriod:np,nextOv:addDays(np,ov),fertileStart:addDays(np,ov-5),cl:cl,pd:pd};
+}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadData(){try{var r=localStorage.getItem(STORAGE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+function saveData(o){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(o));}catch(e){}}
+function clearData(){try{localStorage.removeItem(STORAGE_KEY);}catch(e){}}
+
+// ── DOM ───────────────────────────────────────────────────────────────────────
+function mk(tag,cls,attrs){
+  var e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(attrs){
+    var k,v;
+    for(k in attrs){
+      v=attrs[k];
+      if(k==='style'){var sk;for(sk in v)e.style[sk]=v[sk];}
+      else if(k.substring(0,2)==='on')e.addEventListener(k.substring(2).toLowerCase(),v);
+      else e.setAttribute(k,v);
+    }
+  }
+  return e;
+}
+function tx(s){return document.createTextNode(String(s));}
+function ap(parent,children){
+  var i,c;
+  for(i=0;i<children.length;i++){
+    c=children[i];
+    if(c==null||c===false||c==='')continue;
+    parent.appendChild(typeof c==='string'||typeof c==='number'?tx(c):c);
+  }
+  return parent;
+}
+function d(cls,children,style){var e=mk('div',cls||'');if(style)for(var k in style)e.style[k]=style[k];if(children)ap(e,Array.isArray(children)?children:[children]);return e;}
+function btn(cls,text,onClick){var b=mk('button',cls);b.textContent=text;b.addEventListener('click',onClick);return b;}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var S={
+  cycles:[],name:'',onboarded:false,
+  tab:'today',
+  viewYear:new Date().getFullYear(),viewMonth:new Date().getMonth(),
+  selectedCalDay:null,
+  showForm:false,editId:null,
+  formData:{start:'',periodDuration:5,cycleLength:28},
+  onboardStep:0,onboardData:{name:'',start:'',pd:5,cl:28},
+  showConfirmReset:false
+};
+function setState(patch){
+  var k;
+  if(typeof patch==='function')patch=patch(S);
+  for(k in patch)S[k]=patch[k];
+  render();
+}
+
+// ── Onboarding ────────────────────────────────────────────────────────────────
+function renderOnboarding(){
+  var od=S.onboardData,step=S.onboardStep;
+
+  var steps=[
+    {emoji:'🌸',title:'Hola, bienvenida',subtitle:'Esta app es solo tuya. Sin anuncios, sin registro.',canNext:true,
+     body:function(){
+       var inp=mk('input','inp',{type:'text',placeholder:'Tu nombre (opcional)',value:od.name||''});
+       inp.addEventListener('input',function(){setState(function(s){return{onboardData:Object.assign({},s.onboardData,{name:inp.value})};});});
+       return[mk('span','lbl',{}),ap(mk('span','lbl'),['¿Cómo te llamas?']),inp,
+         ap(mk('p','',{style:{fontSize:'13px',color:'#b0a0b8',marginTop:'12px',lineHeight:'1.6'}}),
+           ['Solo necesitas agregar ',ap(mk('strong'),['3 datos']),' cuando empieza tu período.'])];
+     }
+    },
+    {emoji:'📅',title:'¿Cuándo empezó tu último período?',subtitle:'Con esta fecha calculamos todo tu ciclo.',canNext:!!od.start,
+     body:function(){
+       var di=mk('input','inp',{type:'date',max:toYMD(new Date())});
+       if(od.start)di.value=od.start;
+       di.addEventListener('input',function(){setState(function(s){return{onboardData:Object.assign({},s.onboardData,{start:di.value})};});});
+       var pdLbl=ap(mk('span','lbl'),['¿Cuántos días duró? ',ap(mk('strong','',{style:{color:'#E8758A',fontSize:'15px'}}),[String(od.pd)])]);
+       var pdS=mk('input','pink',{type:'range',min:'2',max:'10'});pdS.value=od.pd;
+       pdS.addEventListener('input',function(){setState(function(s){return{onboardData:Object.assign({},s.onboardData,{pd:+pdS.value})};});});
+       return[ap(mk('span','lbl'),['Fecha de inicio']),di,
+         d('',[ pdLbl,pdS,
+           ap(d('row between',null,{fontSize:'11px',color:'#c0a0c0'}),['2','5 (promedio)','10'].map(function(t){return ap(mk('span'),[t]);}))
+         ],{marginTop:'16px'})];
+     }
+    },
+    {emoji:'🔄',title:'¿Cada cuántos días llega?',subtitle:'Si no estás segura, 28 días es el promedio.',canNext:true,
+     body:function(){
+       var clLbl=ap(mk('span','lbl'),['Duración del ciclo ',ap(mk('strong','',{style:{color:'#8B5E83',fontSize:'15px'}}),[od.cl+' días'])]);
+       var clS=mk('input','mauve',{type:'range',min:'21',max:'35'});clS.value=od.cl;
+       clS.addEventListener('input',function(){setState(function(s){return{onboardData:Object.assign({},s.onboardData,{cl:+clS.value})};});});
+       return[clLbl,clS,
+         ap(d('row between',null,{fontSize:'11px',color:'#c0a0c0',marginBottom:'12px'}),['21','28','35'].map(function(t){return ap(mk('span'),[t]);})),
+         ap(d('',null,{marginTop:'8px',padding:'12px 14px',borderRadius:'10px',background:'#f5eef5',fontSize:'13px',color:'#7a6080',lineHeight:'1.6'}),
+           ['✨ Con el tiempo, la app aprenderá tu ciclo real y las predicciones serán más precisas.'])];
+     }
+    }
+  ];
+
+  var cur=steps[step];
+
+  var dotsEl=d('dots',[]);
+  for(var di2=0;di2<steps.length;di2++){
+    var dot=d('dot '+(di2===step?'active':''),null,{width:di2===step?'22px':'8px'});
+    dotsEl.appendChild(dot);
+  }
+
+  var bodyNodes=cur.body();
+
+  var nextB;
+  if(step<steps.length-1){
+    nextB=btn('btn-primary','Continuar →',function(){if(cur.canNext)setState({onboardStep:step+1});});
+    if(!cur.canNext)nextB.style.opacity='0.5';
+  }else{
+    nextB=btn('btn-primary','¡Listo, empezar! 🌸',function(){
+      if(!S.onboardData.start)return;
+      var nc={id:Date.now(),start:S.onboardData.start,periodDuration:S.onboardData.pd,cycleLength:S.onboardData.cl};
+      var ns={cycles:[nc],name:S.onboardData.name||'tú',onboarded:true,tab:'today'};
+      saveData(ns);
+      setState(ns);
+    });
+    if(!od.start)nextB.style.opacity='0.5';
+  }
+
+  var backB=step>0?btn('btn-ghost','← Atrás',function(){setState({onboardStep:step-1});}):null;
+
+  var content=d('',null,{background:'#FDF6F9',minHeight:'100vh',display:'flex',flexDirection:'column',maxWidth:'430px',margin:'0 auto'});
+  content.appendChild(dotsEl);
+  var top=d('',null,{padding:'80px 24px 0'});
+  ap(top,[d('',null,{fontSize:'52px',marginBottom:'12px'}),ap(d('',null,{fontSize:'52px',marginBottom:'12px'}),[cur.emoji])].slice(1));
+  top.appendChild(ap(d('',null,{fontSize:'52px',marginBottom:'12px'}),[cur.emoji]));
+  top.appendChild(ap(mk('h1','',{style:{fontSize:'22px',fontWeight:'800',color:'#5a3d5a',marginBottom:'6px'}}),[cur.title]));
+  top.appendChild(ap(mk('p','',{style:{fontSize:'14px',color:'#b0a0b8',marginBottom:'24px',lineHeight:'1.5'}}),[cur.subtitle]));
+  ap(top,bodyNodes);
+  content.appendChild(top);
+
+  var bottom=d('',null,{padding:'24px 24px 48px',marginTop:'auto',display:'flex',flexDirection:'column',gap:'10px'});
+  bottom.appendChild(nextB);
+  if(backB)bottom.appendChild(backB);
+  content.appendChild(bottom);
+  return content;
+}
+
+// ── Cycle Form ────────────────────────────────────────────────────────────────
+function renderCycleForm(isEdit){
+  var fd=S.formData;
+  var overlay=d('modal-bg',[]);
+
+  var sheet=d('modal-sheet',[d('drag-handle',[])]);
+  ap(sheet,[ap(mk('h2','',{style:{margin:'0 0 18px',color:'#5a3d5a',fontSize:'17px',fontWeight:'700'}}),
+    [isEdit?'✏️ Editar período':'🌸 Nuevo período'])]);
+
+  // date
+  var dateInp=mk('input','inp',{type:'date',max:toYMD(new Date())});
+  if(fd.start)dateInp.value=fd.start;
+  dateInp.addEventListener('input',function(){setState(function(s){return{formData:Object.assign({},s.formData,{start:dateInp.value})};});});
+
+  // period duration
+  var pdDisp=ap(mk('strong','',{style:{color:'#E8758A'}}),[String(fd.periodDuration)]);
+  var pdS=mk('input','pink',{type:'range',min:'2',max:'10'});pdS.value=fd.periodDuration;
+  pdS.addEventListener('input',function(){setState(function(s){return{formData:Object.assign({},s.formData,{periodDuration:+pdS.value})};});});
+
+  // cycle length
+  var clDisp=ap(mk('strong','',{style:{color:'#8B5E83'}}),[fd.cycleLength+' días']);
+  var clS=mk('input','mauve',{type:'range',min:'21',max:'35'});clS.value=fd.cycleLength;
+  clS.addEventListener('input',function(){setState(function(s){return{formData:Object.assign({},s.formData,{cycleLength:+clS.value})};});});
+
+  var saveB=btn('btn-primary','Guardar',function(){
+    var f=S.formData;
+    if(!f.start)return;
+    var nc,newCycles;
+    if(isEdit){
+      newCycles=S.cycles.map(function(c){return c.id===S.editId?Object.assign({},c,{start:f.start,periodDuration:+f.periodDuration,cycleLength:+f.cycleLength}):c;});
+      setState({cycles:newCycles,editId:null});
+    }else{
+      nc={id:Date.now(),start:f.start,periodDuration:+f.periodDuration,cycleLength:+f.cycleLength};
+      newCycles=S.cycles.concat([nc]).sort(function(a,b){return new Date(a.start)-new Date(b.start);});
+      setState({cycles:newCycles,showForm:false});
+    }
+    saveData({cycles:newCycles,name:S.name,onboarded:true});
+  });
+  saveB.style.marginBottom='10px';
+  if(!fd.start)saveB.style.opacity='0.5';
+
+  var cancelB=btn('btn-ghost','Cancelar',function(){setState({showForm:false,editId:null});});
+
+  var lDate=mk('label','',{style:{display:'block',marginBottom:'14px'}});
+  ap(lDate,[ap(mk('span','lbl'),['¿Cuándo empezó?']),dateInp]);
+
+  var lPd=mk('label','',{style:{display:'block',marginBottom:'14px'}});
+  ap(lPd,[ap(mk('span','lbl'),['Días de período ',pdDisp]),pdS]);
+
+  var lCl=mk('label','',{style:{display:'block',marginBottom:'22px'}});
+  ap(lCl,[ap(mk('span','lbl'),['Duración del ciclo ',clDisp]),clS,
+    ap(d('row between',null,{fontSize:'11px',color:'#c0a0c0',marginTop:'2px'}),['21','28','35'].map(function(t){return ap(mk('span'),[t]);}))]);
+
+  ap(sheet,[lDate,lPd,lCl,saveB,cancelB]);
+  overlay.appendChild(sheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)setState({showForm:false,editId:null});});
+  return overlay;
+}
+
+// ── Confirm Reset ─────────────────────────────────────────────────────────────
+function renderConfirmReset(){
+  var overlay=d('confirm-bg',[]);
+  var box=d('confirm-box',[]);
+  ap(box,[
+    ap(d('',null,{fontSize:'40px',marginBottom:'12px'}),['🔄']),
+    ap(mk('h3','',{style:{color:'#5a3d5a',fontSize:'18px',fontWeight:'800',marginBottom:'8px'}}),['¿Empezar de nuevo?']),
+    ap(mk('p','',{style:{color:'#b0a0b8',fontSize:'14px',lineHeight:'1.6',marginBottom:'20px'}}),
+      ['Esto borrará todos los ciclos y el nombre. No se puede deshacer.']),
+    (function(){var b=btn('btn-primary','Sí, borrar todo y reiniciar',function(){
+      clearData();
+      setState({cycles:[],name:'',onboarded:false,tab:'today',onboardStep:0,
+        onboardData:{name:'',start:'',pd:5,cl:28},showConfirmReset:false,selectedCalDay:null});
+    });b.style.background='linear-gradient(135deg,#e05070,#e8758a)';b.style.marginBottom='10px';return b;})(),
+    btn('btn-ghost','Cancelar, conservar mis datos',function(){setState({showConfirmReset:false});})
+  ]);
+  overlay.appendChild(box);
+  return overlay;
+}
+
+// ── Today View ────────────────────────────────────────────────────────────────
+function renderTodayView(){
+  var cycles=S.cycles,t=today0();
+  var phase=phaseOnDay(t,cycles),dayNum=dayOfCycle(cycles);
+  var ne=nextEvents(cycles),acl=avgCycleLen(cycles);
+  var daysUntil=ne.nextPeriod?daysBetween(t,ne.nextPeriod):null;
+  var ph=phase?PHASES[phase]:null;
+  var wrap=d('',null,{padding:'20px 16px'});
+
+  // Hero
+  var hero;
+  if(ph){
+    var countdown='';
+    if(daysUntil!==null&&daysUntil>0){
+      countdown=ap(d('',null,{textAlign:'center',background:'#fff',borderRadius:'12px',padding:'8px 12px',boxShadow:'0 2px 8px rgba(139,94,131,0.1)'}),
+        [ap(d('',null,{fontSize:'22px',fontWeight:'800',color:'#E8758A'}),[String(daysUntil)]),
+         ap(d('',null,{fontSize:'10px',color:'#b0a0b8',lineHeight:'1.3'}),['días para el período'])]);
+    }else if(daysUntil===0){
+      countdown=ap(d('',null,{textAlign:'center',background:'#fce8ed',borderRadius:'12px',padding:'8px 12px'}),
+        [ap(d('',null,{fontSize:'12px',fontWeight:'700',color:'#E8758A'}),['¡Hoy!'])]);
+    }
+    var heroInner=d('',null,{display:'flex',justifyContent:'space-between',alignItems:'flex-start'});
+    ap(heroInner,[
+      ap(d(''),
+        [ap(mk('span','',{style:{fontSize:'11px',color:ph.color,fontWeight:'700',textTransform:'uppercase',letterSpacing:'1px'}}),['Hoy, día '+dayNum+' de tu ciclo']),
+         ap(d('',null,{fontSize:'26px',fontWeight:'800',color:'#3d2540',marginTop:'4px'}),[ph.emoji+' '+ph.label])]),
+      countdown
+    ]);
+    hero=d('',null,{borderRadius:'20px',padding:'24px 22px',marginBottom:'16px',
+      background:'linear-gradient(135deg,'+ph.color+'18,'+ph.color+'08)',
+      border:'1.5px solid '+ph.color+'30'});
+    hero.appendChild(heroInner);
+    hero.appendChild(ap(mk('p','',{style:{fontSize:'13px',color:'#6a4a6a',margin:'12px 0 0',lineHeight:'1.6'}}),[ph.tip]));
+  }else{
+    var addB=btn('btn-primary','+ Agregar período',function(){setState({showForm:true,formData:{start:'',periodDuration:5,cycleLength:28}});});
+    addB.style.width='auto';addB.style.padding='12px 28px';
+    hero=d('card',null,{textAlign:'center',padding:'32px 20px'});
+    ap(hero,[ap(d('',null,{fontSize:'44px'}),['🌸']),
+      ap(mk('p','',{style:{color:'#b0a0b8',fontSize:'14px',margin:'10px 0 16px'}}),['Agrega tu primer período para ver tu ciclo']),addB]);
+  }
+  wrap.appendChild(hero);
+
+  // Coming days
+  var tmrP=phaseOnDay(addDays(t,1),cycles),d2P=phaseOnDay(addDays(t,2),cycles);
+  var rows=[{label:'Mañana',p:tmrP},{label:'Pasado mañana',p:d2P}].filter(function(x){return x.p;});
+  if(rows.length){
+    var coming=d('card',[ap(mk('span','lbl'),['Próximos días'])]);
+    rows.forEach(function(row){
+      var rowEl=d('',null,{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px'});
+      ap(rowEl,[ap(d('',null,{width:'32px',height:'32px',borderRadius:'50%',background:PHASES[row.p].bg,
+          display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px'}),[PHASES[row.p].emoji]),
+        ap(d(''),[ap(d('',null,{fontSize:'12px',color:'#b0a0b8'}),[row.label]),
+          ap(d('',null,{fontSize:'14px',fontWeight:'600',color:'#5a3d5a'}),[PHASES[row.p].label])])]);
+      coming.appendChild(rowEl);
+    });
+    wrap.appendChild(coming);
+  }
+
+  // Next events
+  if(ne.nextPeriod){
+    var evCard=d('card',[ap(mk('span','lbl'),['Próximos eventos'])]);
+    [{emoji:'🌸',label:'Próximo período',date:ne.nextPeriod,color:'#E8758A'},
+     {emoji:'✨',label:'Ventana fértil',date:ne.fertileStart,color:'#8B5E83'},
+     {emoji:'🌕',label:'Ovulación',date:ne.nextOv,color:'#c084a8'}].forEach(function(ev){
+      var diff=daysBetween(t,ev.date);
+      var row=d('',null,{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'});
+      var left=d('',null,{display:'flex',alignItems:'center',gap:'10px'});
+      ap(left,[ap(d('',null,{width:'34px',height:'34px',borderRadius:'50%',background:ev.color+'18',
+          display:'flex',alignItems:'center',justifyContent:'center',fontSize:'17px'}),[ev.emoji]),
+        ap(d(''),[ap(d('',null,{fontSize:'13px',color:'#7a6080'}),[ev.label]),
+          ap(d('',null,{fontSize:'12px',color:'#b0a0b8'}),[ev.date.getDate()+' '+MONTHS[ev.date.getMonth()]])])]);
+      ap(row,[left,ap(d('',null,{fontWeight:'700',fontSize:'15px',color:ev.color}),[diff<=0?'hoy':'en '+diff+'d'])]);
+      evCard.appendChild(row);
+    });
+    wrap.appendChild(evCard);
+  }
+
+  // Stats
+  if(cycles.length){
+    var clV=(acl||cycles[cycles.length-1].cycleLength)+'d';
+    var statsCard=d('card',null,{display:'flex'});
+    [{label:'Ciclo promedio',value:clV,sub:acl?'historial real':'tu estimación'},
+     {label:'Registros',value:String(cycles.length),sub:cycles.length>=3?'predicciones precisas ✓':(3-cycles.length)+' más para mejorar'}]
+    .forEach(function(s,i){
+      var col=d('',null,{flex:'1',textAlign:'center',borderLeft:i?'1px solid #f0dce8':'none'});
+      ap(col,[ap(d('',null,{fontSize:'22px',fontWeight:'800',color:'#8B5E83'}),[s.value]),
+        ap(d('',null,{fontSize:'11px',color:'#b0a0b8',marginTop:'2px'}),[s.label]),
+        ap(d('',null,{fontSize:'10px',color:'#c8b0c8',marginTop:'1px'}),[s.sub])]);
+      statsCard.appendChild(col);
+    });
+    wrap.appendChild(statsCard);
+  }
+  return wrap;
+}
+
+// ── Calendar View ─────────────────────────────────────────────────────────────
+function renderCalendarView(){
+  var cycles=S.cycles,year=S.viewYear,month=S.viewMonth,selDay=S.selectedCalDay;
+  var firstDay=new Date(year,month,1).getDay();
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var t=today0();
+
+  var wrap=d('',null,{padding:'20px 16px'});
+
+  // Nav
+  var nav=d('',null,{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'});
+  var prevB=btn('','\u2039',function(){
+    var nm=month-1<0?11:month-1,ny=month-1<0?year-1:year;
+    setState({viewMonth:nm,viewYear:ny,selectedCalDay:null});
+  });prevB.style.cssText='background:none;border:none;font-size:22px;color:#8B5E83;padding:4px 10px;';
+  var nextB=btn('','\u203a',function(){
+    var nm=month+1>11?0:month+1,ny=month+1>11?year+1:year;
+    setState({viewMonth:nm,viewYear:ny,selectedCalDay:null});
+  });nextB.style.cssText='background:none;border:none;font-size:22px;color:#8B5E83;padding:4px 10px;';
+  ap(nav,[prevB,ap(mk('span','',{style:{fontWeight:'700',color:'#5a3d5a',fontSize:'16px'}}),[MONTHS[month]+' '+year]),nextB]);
+  wrap.appendChild(nav);
+
+  // Day headers
+  var hdr=mk('div','',{style:{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:'2px',marginBottom:'6px'}});
+  DAYS.forEach(function(dn){ap(hdr,[ap(d('',null,{textAlign:'center',fontSize:'11px',color:'#c0a0c0',fontWeight:'600',padding:'4px 0'}),[dn])]);});
+  wrap.appendChild(hdr);
+
+  // Grid
+  var grid=mk('div','',{style:{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:'3px'}});
+  for(var ei=0;ei<firstDay;ei++)grid.appendChild(d(''));
+  for(var di=1;di<=daysInMonth;di++){
+    (function(day){
+      var p=phaseOnDay(new Date(year,month,day),cycles);
+      var isToday=t.getDate()===day&&t.getMonth()===month&&t.getFullYear()===year;
+      var isSel=selDay===day;
+      var cls='cal-day'+(p?' phase-'+p:'')+(isToday?' is-today':'')+(isSel?' is-selected':'');
+      var b=mk('button',cls);
+      // inner span for centering text (because of padding-bottom trick)
+      var sp=mk('span');sp.textContent=String(day);
+      b.appendChild(sp);
+      b.addEventListener('click',function(){setState({selectedCalDay:isSel?null:day});});
+      grid.appendChild(b);
+    })(di);
+  }
+  wrap.appendChild(grid);
+
+  // Selected day info
+  if(selDay){
+    var sp=phaseOnDay(new Date(year,month,selDay),cycles);
+    var info;
+    if(sp){
+      info=d('',null,{marginTop:'14px',padding:'14px 16px',borderRadius:'12px',
+        background:PHASES[sp].bg,border:'1px solid '+PHASES[sp].color+'30'});
+      ap(info,[ap(d('',null,{fontWeight:'700',color:PHASES[sp].color,fontSize:'15px'}),[PHASES[sp].emoji+' '+MONTHS[month]+' '+selDay+' — '+PHASES[sp].label]),
+        ap(d('',null,{color:'#7a6080',fontSize:'13px',marginTop:'4px'}),[PHASES[sp].tip])]);
+    }else{
+      info=ap(d('',null,{marginTop:'14px',padding:'12px 14px',borderRadius:'12px',background:'#f9f4fa',color:'#b0a0b8',fontSize:'13px'}),['Sin datos para este día']);
+    }
+    wrap.appendChild(info);
+  }
+
+  // Legend
+  var leg=d('',null,{marginTop:'18px',display:'flex',flexWrap:'wrap',gap:'8px'});
+  Object.keys(PHASES).forEach(function(k){
+    var row=d('',null,{display:'flex',alignItems:'center',gap:'5px',fontSize:'12px',color:'#7a6080'});
+    ap(row,[d('',null,{width:'10px',height:'10px',borderRadius:'50%',background:PHASES[k].color}),tx(PHASES[k].label)]);
+    leg.appendChild(row);
+  });
+  wrap.appendChild(leg);
+  return wrap;
+}
+
+// ── History View ──────────────────────────────────────────────────────────────
+function renderHistoryView(){
+  var cycles=S.cycles,acl=avgCycleLen(cycles),apd=avgPeriodDur(cycles);
+  var wrap=d('',null,{padding:'20px 16px'});
+
+  if(cycles.length>=2){
+    var sb=d('card card-grad',null,{marginBottom:'16px'});
+    ap(sb,[ap(mk('span','lbl'),['Tu promedio real'])]);
+    var row=d('',null,{display:'flex',gap:'20px'});
+    [{v:acl+'d',l:'ciclo',c:'#8B5E83'},{v:apd+'d',l:'período',c:'#E8758A'},{v:String(cycles.length),l:'registros',c:'#c084a8'}]
+    .forEach(function(s){
+      ap(row,[ap(d(''),[ap(d('',null,{fontSize:'20px',fontWeight:'800',color:s.c}),[s.v]),ap(d('',null,{fontSize:'11px',color:'#b0a0b8'}),[s.l])])]);
+    });
+    sb.appendChild(row);
+    if(cycles.length<3)sb.appendChild(ap(mk('p','',{style:{fontSize:'12px',color:'#b0a0b8',marginTop:'8px'}}),['Con '+(3-cycles.length)+' ciclo'+(cycles.length<2?'s':'')+' más las predicciones serán más precisas ✨']));
+    wrap.appendChild(sb);
+  }
+
+  if(!cycles.length){
+    wrap.appendChild(ap(d('',null,{textAlign:'center',color:'#b0a0b8',paddingTop:'40px',fontSize:'14px'}),
+      [ap(d('',null,{fontSize:'48px'}),['📋']),ap(mk('p','',{style:{marginTop:'10px'}}),['Aún no hay ciclos registrados'])]));
+  }else{
+    cycles.slice().sort(function(a,b){return new Date(b.start)-new Date(a.start);}).forEach(function(c){
+      var sd=new Date(c.start);
+      var row=d('card',null,{display:'flex',justifyContent:'space-between',alignItems:'center'});
+      var info=d('');
+      ap(info,[ap(d('',null,{fontWeight:'600',color:'#5a3d5a',fontSize:'15px'}),['🌸 '+sd.getDate()+' '+MONTHS[sd.getMonth()]+' '+sd.getFullYear()]),
+        ap(d('',null,{fontSize:'12px',color:'#b0a0b8',marginTop:'3px'}),[c.periodDuration+'d de período · ciclo estimado '+c.cycleLength+'d'])]);
+      var eb=btn('btn-sm-edit','✏️',function(){setState({editId:c.id,formData:{start:c.start,periodDuration:c.periodDuration,cycleLength:c.cycleLength}});});
+      var db=btn('btn-sm-del','🗑',function(){
+        if(confirm('¿Borrar este ciclo?')){
+          var nc=S.cycles.filter(function(x){return x.id!==c.id;});
+          saveData({cycles:nc,name:S.name,onboarded:true});
+          setState({cycles:nc});
+        }
+      });
+      var btns=d('',null,{display:'flex',gap:'4px'});
+      ap(btns,[eb,db]);
+      ap(row,[info,btns]);
+      wrap.appendChild(row);
+    });
+  }
+  return wrap;
+}
+
+// ── Settings View ─────────────────────────────────────────────────────────────
+function renderSettingsView(){
+  var wrap=d('',null,{padding:'20px 16px'});
+  var c1=d('card');
+  ap(c1,[ap(mk('span','lbl'),['Cuenta']),
+    ap(d('',null,{fontSize:'15px',color:'#5a3d5a',marginBottom:'4px'}),['👤 '+S.name]),
+    ap(d('',null,{fontSize:'13px',color:'#b0a0b8'}),[S.cycles.length+' ciclos registrados'])]);
+  var c2=d('card');
+  ap(c2,[ap(mk('span','lbl'),['Sobre la app']),
+    ap(d('',null,{fontSize:'13px',color:'#7a6080',lineHeight:'1.7'}),
+      ['🌸 Mi Ciclo — app personal de seguimiento menstrual',mk('br'),'📱 Funciona sin internet. Los datos se guardan en este dispositivo.',mk('br'),'🔒 Sin servidores, sin cuentas, solo tuya.'])]);
+  var c3=d('card card-danger');
+  var rb=btn('btn-danger','🔄 Reiniciar app desde cero',function(){setState({showConfirmReset:true});});
+  ap(c3,[ap(mk('span','lbl',{style:{color:'#e05070'}}),['Zona de peligro']),
+    ap(mk('p','',{style:{fontSize:'13px',color:'#b0a0b8',marginBottom:'14px',lineHeight:'1.6'}}),
+      ['Si cambias de teléfono o quieres empezar de nuevo, esto borra todos los datos.']),rb]);
+  ap(wrap,[c1,c2,c3]);
+  return wrap;
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+function renderApp(){
+  var TABS=[{key:'today',label:'Hoy',emoji:'🌸'},{key:'calendar',label:'Calendario',emoji:'📅'},
+            {key:'history',label:'Historial',emoji:'📋'},{key:'settings',label:'Ajustes',emoji:'⚙️'}];
+
+  var root=d('',null,{background:'#FDF6F9',minHeight:'100vh',maxWidth:'430px',margin:'0 auto',paddingBottom:'88px'});
+
+  // Header
+  var hdr=d('',null,{background:'linear-gradient(135deg,#8B5E83,#c084a8)',padding:'44px 22px 18px',position:'relative',overflow:'hidden'});
+  ap(hdr,[d('',null,{position:'absolute',top:'-10px',right:'-10px',fontSize:'90px',opacity:'0.1',pointerEvents:'none'}),
+    ap(mk('p','',{style:{color:'rgba(255,255,255,0.65)',margin:'0',fontSize:'12px',letterSpacing:'1.5px',textTransform:'uppercase'}}),['Mi ciclo']),
+    ap(mk('h1','',{style:{color:'#fff',margin:'3px 0 0',fontSize:'22px',fontWeight:'800'}}),['Hola, '+S.name+' 💜'])]);
+  // moon deco
+  hdr.firstChild.textContent='🌙';
+  root.appendChild(hdr);
+
+  // Tab bar
+  var tabBar=d('tab-bar',[]);
+  TABS.forEach(function(tb){
+    var b=btn('tab-btn '+(S.tab===tb.key?'active':''),tb.emoji+' '+tb.label,function(){setState({tab:tb.key});});
+    tabBar.appendChild(b);
+  });
+  root.appendChild(tabBar);
+
+  // Content
+  var content;
+  if(S.tab==='today')content=renderTodayView();
+  else if(S.tab==='calendar')content=renderCalendarView();
+  else if(S.tab==='history')content=renderHistoryView();
+  else content=renderSettingsView();
+  root.appendChild(content);
+
+  // FAB
+  var fab=btn('fab','+',function(){setState({showForm:true,formData:{start:'',periodDuration:5,cycleLength:28}});});
+  root.appendChild(fab);
+
+  if(S.showForm||S.editId)root.appendChild(renderCycleForm(!!S.editId));
+  if(S.showConfirmReset)root.appendChild(renderConfirmReset());
+
+  return root;
+}
+
+// ── Render + Boot ─────────────────────────────────────────────────────────────
+function render(){
+  var app=document.getElementById('app');
+  while(app.firstChild)app.removeChild(app.firstChild);
+  if(S.onboarded)saveData({cycles:S.cycles,name:S.name,onboarded:true});
+  app.appendChild(S.onboarded?renderApp():renderOnboarding());
+}
+
+(function boot(){
+  var data=loadData();
+  if(data){S.cycles=data.cycles||[];S.name=data.name||'';S.onboarded=!!data.onboarded;}
+  render();
+})();
+</script>
+</body>
+</html>
